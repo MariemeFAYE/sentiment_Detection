@@ -4,7 +4,7 @@ import torch
 import torchaudio
 
 TARGET_SR = 16_000
-MAX_DURATION_S = 300  # 5 minutes max (spec du sujet)
+MAX_DURATION_S = 300  # 5 minutes max
 SILENCE_THRESHOLD = 1e-4
 
 class AudioError(Exception):
