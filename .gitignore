@@ -1,0 +1,30 @@
+# Environnement virtuel
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Modèles et caches ML (jamais dans Git : trop lourds)
+.cache/
+models/
+*.bin
+*.safetensors
+
+# Gradio
+.gradio/
+flagged/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Secrets et environnement
+.env
