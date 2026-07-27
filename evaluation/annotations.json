@@ -1,0 +1,11 @@
+[
+  {"fichier": "tests_audio/demo_positif.wav",  "reference": "bonjour je suis vraiment très satisfaite de votre service tout était parfait merci beaucoup", "sentiment": "positif"},
+  {"fichier": "tests_audio/demo_negatif.wav",  "reference": "c'est inadmissible je n'ai toujours pas reçu ma commande je suis très très mécontente", "sentiment": "négatif"},
+  {"fichier": "tests_audio/demo_neutre.wav",   "reference": "bonjour je vous appelle pour savoir si le produit est disponible en magasin merci", "sentiment": "neutre"},
+  {"fichier": "tests_audio/eval_positif_1.wav", "reference": "bonjour le technicien était très professionnel je recommande vivement", "sentiment": "positif"},
+  {"fichier": "tests_audio/eval_positif_2.wav", "reference": "merci pour la livraison rapide le produit est de très bonne qualité merci encore une fois", "sentiment": "positif"},
+  {"fichier": "tests_audio/eval_negatif_1.wav", "reference": "le produit est arrivé cassé c'est vraiment décevant", "sentiment": "négatif"},
+  {"fichier": "tests_audio/eval_negatif_2.wav", "reference": "j'attends depuis deux heures au téléphone c'est décevant c'est un scandale", "sentiment": "négatif"},
+  {"fichier": "tests_audio/eval_neutre_1.wav",  "reference": "bonjour quels sont vos horaires d'ouverture le samedi", "sentiment": "neutre"},
+  {"fichier": "tests_audio/eval_neutre_2.wav",  "reference": "je voudrais connaître le délai de livraison pour dakar", "sentiment": "neutre"}
+]
