@@ -9,3 +9,5 @@ uvicorn[standard]
 python-multipart
 sentencepiece
 protobuf
+jiwer
+scikit-learn
