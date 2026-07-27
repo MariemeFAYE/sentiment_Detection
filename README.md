@@ -2,6 +2,8 @@
 
 > Projet Final — Module Deep Learning 2 — Dakar Institute of Technology (2026)
 
+> 🚀 **Démo en ligne** : https://huggingface.co/spaces/MARIEMEFAYE/SENTIMENT_DETECTION
+
 Pipeline automatisé qui transcrit un appel vocal client en français (**Wav2Vec 2.0**) puis classe le sentiment exprimé en trois classes — **positif**, **négatif**, **neutre** — avec un score de confiance (**DistilCamemBERT**).
 
 ---
@@ -33,9 +35,11 @@ Audio (.wav / .mp3)
 { transcription, sentiment, score, detail }
 ```
 
-Le pipeline est exposé de deux manières :
+Le pipeline est exposé de trois manières :
 - une **interface Gradio** (`demo/gradio_app.py`) pour la démonstration interactive ;
-- une **API REST FastAPI** (`api/main.py`) pour l'intégration dans d'autres applications.
+- une **API REST FastAPI** (`api/main.py`) pour l'intégration dans d'autres applications ;
+- une **démo publique** déployée sur Hugging Face Spaces : lien : https://huggingface.co/spaces/MARIEMEFAYE/SENTIMENT_DETECTION 
+ 
 
 ## 2. Modèles utilisés et justification
 
@@ -90,6 +94,8 @@ Documentation interactive (Swagger) : http://127.0.0.1:8000/docs
 curl -X POST "http://127.0.0.1:8000/predict" -F "file=@tests_audio/demo_positif.wav"
 ```
 
+> **Note Windows/PowerShell** : utiliser `curl.exe` au lieu de `curl` (dans PowerShell, `curl` est un alias d'Invoke-WebRequest et ne reconnaît pas les options standard).
+
 **Exemple d'appel Python :**
 
 ```python
@@ -104,10 +110,10 @@ print(r.status_code, r.json())
 
 ```json
 {
-  "transcription": "je suis très satisfaite de votre service tout était parfait merci beaucoup",
+  "transcription": "je suis vraiment très satisfaite de votre service tout était parfait merci beaucoup",
   "sentiment": "positif",
-  "score": 0.96,
-  "detail": {"négatif": 0.01, "neutre": 0.03, "positif": 0.96}
+  "score": 0.9872,
+  "detail": {"négatif": 0.0041, "neutre": 0.0087, "positif": 0.9872}
 }
 ```
 
@@ -117,7 +123,26 @@ print(r.status_code, r.json())
 {"detail": "Extension '.txt' non supportée. Formats acceptés : .wav, .mp3"}
 ```
 
-## 5. Structure du projet
+## 5. Docker
+
+L'API peut être exécutée dans un conteneur isolé et reproductible :
+
+```bash
+docker build -t sentiment-vocal .
+docker run -p 8000:8000 sentiment-vocal
+```
+
+L'API est alors disponible sur http://127.0.0.1:8000 (docs : /docs). L'image utilise `python:3.11-slim` et la version CPU de PyTorch pour rester légère. Les modèles sont téléchargés au premier démarrage du conteneur (choix assumé : image plus légère et build plus rapide, au prix d'un premier démarrage plus lent — l'alternative serait de pré-télécharger les modèles dans l'image, ~4 Go, pour un conteneur autonome).
+
+## 6. Démo publique (Hugging Face Spaces)
+
+L'interface Gradio est déployée publiquement sur **ZeroGPU** (allocation GPU dynamique via le décorateur `@spaces.GPU`) :
+
+👉 https://huggingface.co/spaces/MARIEMEFAYE/SENTIMENT_DETECTION
+
+Quatre exemples y sont pré-chargés : un par classe de sentiment, plus un « cas difficile » illustrant la règle de seuil.
+
+## 7. Structure du projet
 
 ```
 sentiment_Detection/
@@ -128,19 +153,23 @@ sentiment_Detection/
 │   └── pipeline.py         # orchestration de bout en bout
 ├── api/main.py             # API REST FastAPI (POST /predict)
 ├── demo/gradio_app.py      # interface Gradio
-├── tests_audio/            # fichiers audio de démonstration (un par classe)
+├── evaluation/
+│   ├── annotations.json    # jeu de données annoté (références + labels)
+│   └── evaluer.py          # calcul WER, accuracy, F1, matrice de confusion
+├── tests_audio/            # fichiers de démonstration et d'évaluation
 ├── record.py               # utilitaire d'enregistrement micro
 ├── test_*.py               # scripts de test de chaque module
+├── Dockerfile              # conteneurisation de l'API
 └── requirements.txt
 ```
 
-## 6. Démonstration
+## 8. Démonstration
 
-Trois fichiers de test sont fournis dans `tests_audio/`, un par classe :
+Trois fichiers de démonstration sont fournis dans `tests_audio/`, un par classe :
 
 | Fichier | Sentiment attendu | Sentiment prédit | Confiance |
 |---|---|---|---|
-| `demo_positif.wav` | positif | ✅ positif | 96 % |
+| `demo_positif.wav` | positif | ✅ positif | 99 % |
 | `demo_negatif.wav` | négatif | ✅ négatif | 100 % |
 | `demo_neutre.wav` | neutre | ✅ neutre | 26 %* |
 
@@ -152,16 +181,35 @@ Vérification reproductible :
 python test_demos.py
 ```
 
-## 7. Limites connues
+## 9. Évaluation quantitative
+
+Évaluation sur un petit jeu de données annoté de 9 enregistrements (3 par classe), avec transcriptions de référence. Reproductible via :
+
+```bash
+python -m evaluation.evaluer
+```
+
+![alt text](image.png)
+
+| Métrique | Valeur |
+|---|---|
+| WER moyen (ASR) | 38,4 % |
+| Accuracy (sentiment) | 100 % (9/9) |
+| F1-macro (sentiment) | 1.000 |
+
+**Analyse.** Le WER, calculé après normalisation (minuscules, sans ponctuation ni accents), varie fortement selon l'articulation du locuteur (7 % à 67 % ; sur des phrases de ~10 mots, chaque mot erroné pèse ~10 points). Le résultat principal est la **robustesse du classifieur de sentiment aux erreurs de transcription** : les 9 fichiers sont correctement classés malgré un ASR imparfait, les mots porteurs d'émotion étant généralement bien transcrits. La taille de l'échantillon (n = 9) permet de démontrer le fonctionnement du pipeline, non de garantir une performance générale.
+
+## 10. Limites connues
 
 - **Noms propres** : le modèle ASR décode caractère par caractère sans modèle de langage ; les noms propres absents de ses données d'entraînement sont approximés phonétiquement et peuvent dégrader les mots voisins (observé : « je m'appelle Marième Faye » → « au chez ma palmarien feis apples »).
 - **Sortie ASR brute** : transcription en minuscules, sans ponctuation — comportement normal du décodage CTC greedy.
+- **Sensibilité à l'articulation** : le WER varie fortement selon le débit et l'articulation du locuteur (mesuré de 7 % à 67 % sur le jeu d'évaluation).
 - **Messages mitigés** : un avis mi-positif mi-négatif (« le produit est bien mais la livraison trop lente ») produit des scores partagés et est classé *neutre* par la règle de seuil — choix assumé mais discutable selon le cas d'usage.
-- **Robustesse du sentiment à l'ASR imparfait** : même avec une transcription partiellement erronée, les mots porteurs d'émotion suffisent souvent au classifieur (observé : transcription dégradée classée positive à 96 %). L'inverse reste possible si un mot-clé émotionnel est mal transcrit.
-- **Seuil de confiance (0.5)** : hyperparamètre fixé empiriquement ; il pourrait être optimisé sur un jeu de données annoté.
+- **Robustesse du sentiment à l'ASR imparfait** : même avec une transcription partiellement erronée, les mots porteurs d'émotion suffisent souvent au classifieur (mesuré : 9/9 classés correctement malgré 38 % de WER moyen). L'inverse reste possible si un mot-clé émotionnel est mal transcrit.
+- **Seuil de confiance (0.5)** : hyperparamètre fixé empiriquement ; il pourrait être optimisé sur un jeu de données annoté plus large.
 - **Langue** : pipeline conçu pour le français uniquement.
-- **Performance CPU** : compter quelques dizaines de secondes de traitement par minute d'audio sur un CPU standard.
+- **Performance CPU** : compter quelques dizaines de secondes de traitement par minute d'audio sur un CPU standard (la démo en ligne bénéficie de l'accélération ZeroGPU).
 
-## 8. Auteure
+## 11. Auteure
 
-**Marième FAYE** — Master 2 Intelligence Artificielle et Data Science, Dakar Institute of Technology.
+**Marième FAYE** — Master 2 Intelligence Artificielle, Dakar Institute of Technology.
