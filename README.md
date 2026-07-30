@@ -189,7 +189,7 @@ python test_demos.py
 python -m evaluation.evaluer
 ```
 
-![alt text](image.png)
+![Résultats de l'évaluation : WER, accuracy, F1 et matrice de confusion](docs/resultats_evaluation.png)
 
 | Métrique | Valeur |
 |---|---|
