@@ -63,7 +63,7 @@ git clone https://github.com/MariemeFAYE/sentiment_Detection.git
 cd sentiment_Detection
 
 python -m venv venv
-source venv/bin/activate        # Windows : venv\Scripts\activate
+source venv/bin/activate        # Windows: venv\Scripts\activate
 
 pip install -r requirements.txt
 ```
@@ -212,4 +212,4 @@ python -m evaluation.evaluer
 
 ## 11. Auteure
 
-**Marième FAYE** — Master 2 Intelligence Artificielle, Dakar Institute of Technology.
+**Marième FAYE** — Master 2 Intelligence Artificielle, Dakar Institute of Technology (DIT).
